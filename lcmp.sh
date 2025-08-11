@@ -427,8 +427,10 @@ _error_detect "cp -f ${cur_dir}/conf/index.html /data/www/default/"
 _error_detect "cp -f ${cur_dir}/conf/lcmp.png /data/www/default/"
 _info "Set Caddy completed"
 
-_error_detect "curl -sLo mariadb_repo_setup.sh https://dl.lamp.sh/files/mariadb_repo_setup.sh"
+_error_detect "wget -qO mariadb_repo_setup.sh https://downloads.mariadb.com/MariaDB/mariadb_repo_setup"
 _error_detect "chmod +x mariadb_repo_setup.sh"
+sed -i 's|url_mariadb_repo="https://${url_base}/repo/mariadb-server"|url_mariadb_repo="https://${url_base}/browse/mariadb-server"|g' mariadb_repo_setup.sh
+
 # Fixed MariaDB package signing keys import error
 if get_rhelversion 10; then
     if _exists "update-crypto-policies"; then
@@ -473,6 +475,12 @@ _error_detect "rm -f pma.tar.gz"
 _info "/usr/bin/mariadb -uroot -p 2>/dev/null < /data/www/default/pma/sql/create_tables.sql"
 /usr/bin/mariadb -uroot -p"${db_pass}" 2>/dev/null </data/www/default/pma/sql/create_tables.sql
 _info "Set MariaDB completed"
+
+# 生成 22位 僅包含字母與數字的字串
+PMA_Random_String=$(head -c 100 /dev/urandom | tr -dc 'abcdefghijkmnpqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ23456789_' | fold -w 22 | head -n 1)
+# 更改目錄名稱
+mv /data/www/default/pma /data/www/default/${PMA_Random_String}/
+_info "PMA Directory: /data/www/default/${PMA_Random_String}/"
 
 if check_sys rhel; then
     php_conf="/etc/php-fpm.d/www.conf"
