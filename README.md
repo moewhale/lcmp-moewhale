@@ -61,8 +61,8 @@ And all things will be done in a few minutes.
 - If your server's OS: Enterprise Linux 8 / 9 / 10
 ```bash
 dnf -y install wget git
-git clone https://github.com/moewhale/lcmp-moewhale.git
-mv lcmp-moewhale lcmp
+git clone https://github.com/moewhale/lcmp-teddysun.git
+mv lcmp-teddysun lcmp
 cd lcmp
 chmod 755 *.sh
 ./lcmp.sh 2>&1 | tee lcmp.log
@@ -71,8 +71,8 @@ chmod 755 *.sh
 - If your server's OS: Debian 11 ~ 13 / Ubuntu 20.04 ~ 24.04
 ```bash
 apt-get -y install wget git
-git clone https://github.com/moewhale/lcmp-moewhale.git
-mv lcmp-moewhale lcmp
+git clone https://github.com/moewhale/lcmp-teddysun.git
+mv lcmp-teddysun lcmp
 cd lcmp
 chmod 755 *.sh
 ./lcmp.sh 2>&1 | tee lcmp.log
@@ -180,4 +180,5 @@ Please feel free to report any bugs or issues to us, email to: i@teddysun.com or
 Copyright (C) 2023 - 2025 [Teddysun](https://teddysun.com/)
 
 Licensed under the [GPLv3](LICENSE) License.
+
 
