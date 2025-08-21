@@ -377,7 +377,7 @@ if check_kernel_version; then
         sed -i '/net.core.default_qdisc/d' /etc/sysctl.conf
         sed -i '/net.ipv4.tcp_congestion_control/d' /etc/sysctl.conf
         sed -i '/net.core.rmem_max/d' /etc/sysctl.conf
-        cat >>/etc/sysctl.conf <<EOF
+        cat >>"/etc/sysctl.conf" <<EOF
 net.core.default_qdisc = fq
 net.ipv4.tcp_congestion_control = bbr
 net.core.rmem_max = 2500000
@@ -417,7 +417,7 @@ _error_detect "mkdir -p /data/www/default"
 _error_detect "mkdir -p /var/log/caddy/"
 _error_detect "mkdir -p /etc/caddy/conf.d/"
 _error_detect "chown -R caddy:caddy /var/log/caddy/"
-cat >/etc/caddy/Caddyfile <<EOF
+cat >"/etc/caddy/Caddyfile" <<EOF
 {
 	admin off
 }
@@ -446,6 +446,10 @@ if check_sys rhel; then
     _error_detect "dnf install -y MariaDB-common MariaDB-server MariaDB-client MariaDB-shared MariaDB-backup"
     mariadb_cnf="/etc/my.cnf.d/server.cnf"
 elif check_sys debian || check_sys ubuntu; then
+    if get_debianversion 13 && [ -f "/etc/apt/sources.list.d/mariadb.list" ]; then
+        # MariaDB MaxScale does not have a trixie Release file, disabled by default
+        sed -i 's|^deb \[arch=amd64,arm64\] https://dlm.mariadb.com/repo/maxscale/latest/apt trixie main|#&|' /etc/apt/sources.list.d/mariadb.list
+    fi
     _error_detect "apt-get install -y mariadb-common mariadb-server mariadb-client mariadb-backup"
     mariadb_cnf="/etc/mysql/mariadb.conf.d/50-server.cnf"
 fi
@@ -469,6 +473,31 @@ delete from mysql.user where user='PUBLIC';
 flush privileges;
 exit
 EOF
+
+if check_sys debian || check_sys ubuntu; then
+    if [ -x "/etc/mysql/debian-start" ]; then
+        # Add root password of MariaDB to file: /etc/mysql/debian.cnf
+        cat >"/etc/mysql/debian.cnf" <<EOF
+# THIS FILE IS OBSOLETE. STOP USING IT IF POSSIBLE.
+# This file exists only for backwards compatibility for
+# tools that run '--defaults-file=/etc/mysql/debian.cnf'
+# and have root level access to the local filesystem.
+# With those permissions one can run 'mariadb' directly
+# anyway thanks to unix socket authentication and hence
+# this file is useless. See package README for more info.
+[client]
+host     = localhost
+user     = root
+password = '${db_pass}'
+[mysql_upgrade]
+host     = localhost
+user     = root
+password = '${db_pass}'
+# THIS FILE WILL BE REMOVED IN A FUTURE DEBIAN RELEASE.
+EOF
+    chmod 600 /etc/mysql/debian.cnf
+    fi
+fi
 # Install phpMyAdmin
 _error_detect "wget -qO pma.tar.gz https://dl.lamp.sh/files/pma.tar.gz"
 _error_detect "tar zxf pma.tar.gz -C /data/www/default/"
@@ -563,7 +592,7 @@ sed -i "s#pdo_mysql.default_socket.*#pdo_mysql.default_socket = ${sock_location}
 _error_detect "chown root:caddy /var/lib/php/{session,wsdlcache,opcache}"
 _info "Set PHP completed"
 
-cat >/etc/caddy/conf.d/default.conf <<EOF
+cat >"/etc/caddy/conf.d/default.conf" <<EOF
 :80 {
 	header {
 		Strict-Transport-Security "max-age=31536000; preload"
